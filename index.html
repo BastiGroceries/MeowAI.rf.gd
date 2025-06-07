@@ -1,107 +1,168 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MeowAI - Login/Register page</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen font-sans">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-300 min-h-screen flex items-center justify-center p-4">
 
-  <!-- Alert container -->
-  <div id="alert-container" class="fixed top-5 right-5 space-y-4 z-50"></div>
+  <!-- Notification container -->
+  <div id="notification" class="fixed top-5 right-5 max-w-xs z-50"></div>
 
-  <!-- Login form -->
-  <form id="loginForm" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-    <h2 class="text-2xl font-semibold mb-6 text-gray-800 text-center">Login</h2>
-    <input
-      type="email"
-      id="email"
-      placeholder="Email"
-      required
-      class="w-full px-4 py-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-    <input
-      type="password"
-      id="password"
-      placeholder="Password"
-      required
-      class="w-full px-4 py-3 mb-6 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-    <button
-      type="submit"
-      class="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-semibold"
-    >
-      Login
-    </button>
-  </form>
+  <!-- Auth container -->
+  <div class="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-xl grid grid-cols-1 md:grid-cols-2 overflow-hidden">
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    <!-- Login form -->
+    <section id="login-section" class="p-8">
+      <h1 class="text-4xl font-bold mb-6 text-center">Log in</h1>
+      <form id="login-form" class="space-y-6" autocomplete="off">
+        <div>
+          <label for="login-email" class="block mb-2 font-semibold">Email</label>
+          <input id="login-email" type="email" required
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-indigo-700 dark:text-gray-300" />
+        </div>
+        <div>
+          <label for="login-password" class="block mb-2 font-semibold">Password</label>
+          <input id="login-password" type="password" required
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-indigo-700 dark:text-gray-300" />
+        </div>
+        <button type="submit" class="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:scale-105 transition transform duration-300">
+          Log In
+        </button>
+      </form>
+      <p class="mt-6 text-center text-sm">
+        Don't have an account? <button id="show-signup" class="text-blue-400 hover:underline">Sign Up</button>
+      </p>
+    </section>
 
+    <!-- Signup form -->
+    <section id="signup-section" class="hidden p-8">
+      <h1 class="text-4xl font-bold mb-6 text-center">Create Account</h1>
+      <form id="signup-form" class="space-y-6" autocomplete="off">
+        <div>
+          <label for="signup-email" class="block mb-2 font-semibold">Email</label>
+          <input id="signup-email" type="email" required
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label for="signup-password" class="block mb-2 font-semibold">Password</label>
+          <input id="signup-password" type="password" required minlength="6"
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label for="signup-confirm-password" class="block mb-2 font-semibold">Confirm Password</label>
+          <input id="signup-confirm-password" type="password" required minlength="6"
+            class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <button type="submit" class="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition duration-300">
+          Create Account
+        </button>
+      </form>
+      <p class="mt-6 text-center text-sm">
+        Already have an account? <button id="show-login" class="text-blue-400 hover:underline">Log In</button>
+      </p>
+    </section>
+  </div>
+
+  <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBHMg3N7pUwWCa8XXQAgzs1SbDKgJhtR8s",
       authDomain: "chatbotmeowai.firebaseapp.com",
       projectId: "chatbotmeowai",
-      storageBucket: "chatbotmeowai.firebasestorage.app",
+      storageBucket: "chatbotmeowai.appspot.com",
       messagingSenderId: "588486839323",
       appId: "1:588486839323:web:882787a34138bb420fbcbe",
       measurementId: "G-BNFE0BZXXP"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-    function showAlert(message, type = "success") {
-      const container = document.getElementById("alert-container");
-      const alert = document.createElement("div");
+    // Elements
+    const loginSection = document.getElementById('login-section');
+    const signupSection = document.getElementById('signup-section');
 
-      // Base styles + type-based styles
-      alert.className = `flex items-center justify-between max-w-sm w-full rounded-md p-4 text-sm font-semibold shadow-md transition transform hover:scale-[1.03] cursor-default
-        ${
-          type === "success"
-            ? "bg-green-100 text-green-800 border-l-4 border-green-600"
-            : "bg-red-100 text-red-800 border-l-4 border-red-600"
-        }`;
+    const showSignupBtn = document.getElementById('show-signup');
+    const showLoginBtn = document.getElementById('show-login');
 
-      alert.innerHTML = `
-        <div class="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6 ${
-            type === "success" ? "text-green-600" : "text-red-600"
-          }">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="${
-                type === "success"
-                  ? "M5 13l4 4L19 7"  // check mark
-                  : "M6 18L18 6M6 6l12 12"  // cross mark
-              }" />
-          </svg>
-          <span>${message}</span>
+    const notificationEl = document.getElementById('notification');
+
+    // Switch between forms
+    showSignupBtn.addEventListener('click', () => {
+      loginSection.classList.add('hidden');
+      signupSection.classList.remove('hidden');
+    });
+    showLoginBtn.addEventListener('click', () => {
+      signupSection.classList.add('hidden');
+      loginSection.classList.remove('hidden');
+    });
+
+    // Show notifications
+    function showNotification(type, message) {
+      const colors = {
+        success: 'bg-green-100 text-green-900 border-green-500 dark:bg-green-900 dark:text-green-100',
+        error: 'bg-red-100 text-red-900 border-red-500 dark:bg-red-900 dark:text-red-100',
+      };
+      const icon = {
+        success: `<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>`,
+        error: `<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>`,
+      };
+
+      notificationEl.innerHTML = `
+        <div role="alert" class="border-l-4 p-4 rounded shadow flex items-center gap-3 ${colors[type]}">
+          <div>${icon[type]}</div>
+          <p class="font-semibold">${message}</p>
+          <button aria-label="Close" class="ml-auto font-bold" onclick="this.parentElement.remove()">×</button>
         </div>
-        <button aria-label="Close alert" class="text-xl font-bold hover:text-opacity-80 transition" onclick="this.parentElement.remove()">&times;</button>
       `;
 
-      container.appendChild(alert);
-
-      // Auto-remove after 5 seconds
       setTimeout(() => {
-        alert.remove();
+        if (notificationEl.firstChild) notificationEl.firstChild.remove();
       }, 5000);
     }
 
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    // Signup form
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('signup-confirm-password').value;
 
-      const email = e.target.email.value.trim();
-      const password = e.target.password.value;
+      if (password !== confirmPassword) {
+        showNotification('error', "Passwords don't match");
+        return;
+      }
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        showAlert("Login successful! Welcome back.", "success");
-        // Optional: redirect or other logic here
-      } catch (error) {
-        showAlert(`Login failed: ${error.message}`, "error");
+        await auth.createUserWithEmailAndPassword(email, password);
+        showNotification('success', 'Account created successfully! Please log in.');
+        signupSection.classList.add('hidden');
+        loginSection.classList.remove('hidden');
+        document.getElementById('signup-form').reset();
+      } catch (err) {
+        showNotification('error', err.message);
+      }
+    });
+
+    // Login form
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        showNotification('success', 'Logged in successfully!');
+        document.getElementById('login-form').reset();
+        // You can redirect or load app page here
+      } catch (err) {
+        showNotification('error', err.message);
       }
     });
   </script>
